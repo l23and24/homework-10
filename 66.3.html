@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Фізика: Контроль знань (Кипіння)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #f8fafc;
+        }
+        .progress-bar { transition: width 0.5s ease-in-out; }
+        .timer-ring { transition: stroke-dashoffset 1s linear; }
+        
+        .opt-btn {
+            font-size: 1.1rem;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-8px); }
+            80% { transform: translateX(8px); }
+        }
+        .shake-effect {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes fail-flash {
+            0% { background-color: transparent; }
+            50% { background-color: rgba(239, 68, 68, 0.1); }
+            100% { background-color: transparent; }
+        }
+        .fail-overlay {
+            animation: fail-flash 0.5s ease-out;
+        }
+
+        @keyframes wink {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(0.1); }
+        }
+        .eye-wink {
+            animation: wink 3s infinite;
+            transform-origin: center;
+        }
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+        .smile-float {
+            animation: floating 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div id="app" class="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 relative">
+        
+        <!-- Стартовий екран -->
+        <div id="start-screen" class="p-8 md:p-16 flex flex-col items-center text-center">
+            <div class="smile-float mb-8">
+                <svg width="120" height="120" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45" fill="#FFD93D" stroke="#000" stroke-width="2"/>
+                    <circle cx="35" cy="40" r="5" fill="#000" class="eye-wink"/>
+                    <circle cx="65" cy="40" r="5" fill="#000"/>
+                    <path d="M30 65C30 65 40 75 50 75C60 75 70 65 70 65" stroke="#000" stroke-width="4" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <h1 class="text-4xl font-black text-slate-800 mb-6 uppercase tracking-tight leading-tight">Спеціальна перевірка: Температура кипіння</h1>
+            <p class="text-xl text-slate-600 mb-10 leading-relaxed">Питання 9 та 10: <br> Чинники температури кипіння та енергетичні процеси.</p>
+            <button onclick="quiz.start()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-5 px-12 rounded-2xl text-2xl shadow-lg transform hover:scale-105 active:scale-95 transition-all">
+                ПЕРЕВІРИТИ ЗНАННЯ
+            </button>
+        </div>
+
+        <!-- Екран тесту -->
+        <div id="quiz-screen" class="hidden p-6 md:p-10">
+            <div class="flex justify-between items-center mb-10">
+                <div>
+                    <p id="question-counter" class="text-blue-600 font-extrabold text-lg uppercase tracking-wider">Запитання 1/12</p>
+                    <div class="w-48 h-3 bg-slate-100 rounded-full mt-2 overflow-hidden">
+                        <div id="progress-bar" class="h-full bg-blue-600 progress-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="relative w-20 h-20">
+                    <svg class="w-full h-full transform -rotate-90">
+                        <circle cx="50%" cy="50%" r="40%" stroke="#f1f5f9" stroke-width="8" fill="transparent" />
+                        <circle id="timer-circle" cx="50%" cy="50%" r="40%" stroke="#2563eb" stroke-width="8" fill="transparent" stroke-dasharray="100" stroke-dashoffset="0" pathLength="100" class="timer-ring" />
+                    </svg>
+                    <span id="timer-text" class="absolute inset-0 flex items-center justify-center font-black text-xl text-slate-700">20</span>
+                </div>
+            </div>
+
+            <h2 id="question-text" class="text-2xl md:text-3xl font-bold text-slate-800 mb-8 min-h-[4rem] leading-tight">Завантаження...</h2>
+            
+            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Кнопки відповідей -->
+            </div>
+        </div>
+
+        <!-- Екран результатів -->
+        <div id="results-screen" class="hidden p-8 md:p-16 flex flex-col items-center text-center">
+            <h2 class="text-4xl font-black text-slate-800 mb-2">Твій результат</h2>
+            <div id="score-circle" class="text-8xl font-black text-blue-600 my-8">0%</div>
+            <p id="result-message" class="text-xl text-slate-600 mb-10 font-medium max-w-md"></p>
+            <button onclick="location.reload()" class="bg-slate-900 text-white font-bold py-4 px-10 rounded-xl hover:bg-black transform transition-all hover:scale-105 active:scale-95">
+                Спробувати знову
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            { 
+                q: "Від яких основних чинників залежить температура кипіння рідини?", 
+                a: ["Від об'єму рідини та форми посудини", "Від роду рідини та зовнішнього атмосферного тиску", "Тільки від потужності пальника", "Від початкової температури рідини"], 
+                c: 1 
+            },
+            { 
+                q: "Чому температура кипіння залежить від атмосферного тиску?", 
+                a: ["Бо тиск змінює хімічний склад води", "Бульбашкам пари потрібно подолати зовнішній тиск, щоб розширитися", "Тиск охолоджує стінки посудини", "Це випадковий збіг"], 
+                c: 1 
+            },
+            { 
+                q: "Як зміниться температура кипіння води високо в горах, де тиск менший?", 
+                a: ["Вона стане вищою за 100°C", "Вона стане нижчою за 100°C", "Залишиться рівною 100°C", "Вода взагалі перестане кипіти"], 
+                c: 1 
+            },
+            { 
+                q: "Чому під час кипіння температура рідини залишається незмінною, хоча ми продовжуємо її гріти?", 
+                a: ["Нагрівач автоматично вимикається", "Рідина віддає все тепло повітрю", "Вся енергія витрачається на руйнування зв'язків між молекулами (пароутворення)", "Температура насправді зростає, але ми цього не бачимо"], 
+                c: 2 
+            },
+            { 
+                q: "Куди зникає енергія, яку ми передаємо рідині під час її кипіння?", 
+                a: ["Йде на збільшення потенціальної енергії взаємодії молекул пари", "Зникає безслідно", "Йде на нагрівання навколишнього середовища", "Зменшує швидкість руху молекул"], 
+                c: 0 
+            },
+            { 
+                q: "Чому в каструлі-скороварці їжа готується швидше?", 
+                a: ["Там менше води", "Високий тиск підвищує температуру кипіння, і вода стає гарячішою за 100°C", "Пара всередині стає холодною", "Через відсутність кипіння"], 
+                c: 1 
+            },
+            {
+                q: "Як впливає наявність розчиненого газу в рідині на початок кипіння?",
+                a: ["Газ заважає кипінню", "Газ створює центри пароутворення (бульбашки)", "Газ ніяк не впливає", "Газ зменшує об'єм рідини"],
+                c: 1
+            },
+            {
+                q: "Яка енергія змінюється у молекул під час кипіння при постійній температурі?",
+                a: ["Кінетична енергія руху молекул", "Тільки маса молекул", "Потенціальна енергія взаємодії молекул", "Енергія атомних ядер"],
+                c: 2
+            },
+            {
+                q: "Чому кипіння вважають інтенсивним процесом пароутворення?",
+                a: ["Бо воно супроводжується шумом", "Бо пара утворюється по всьому об'єму рідини, а не тільки з поверхні", "Бо рідина стає дуже гарячою", "Бо процес іде дуже повільно"],
+                c: 1
+            },
+            {
+                q: "Чи може вода закипіти при кімнатній температурі (20°C)?",
+                a: ["Ні, це неможливо", "Так, якщо сильно зменшити зовнішній тиск (створити вакуум)", "Так, якщо додати солі", "Тільки взимку"],
+                c: 1
+            },
+            {
+                q: "Що відбувається з температурою кипіння рідини, якщо в ній розчинено сіль?",
+                a: ["Температура кипіння зазвичай підвищується", "Температура кипіння знижується", "Температура не змінюється", "Рідина перестає випаровуватися"],
+                c: 0
+            },
+            {
+                q: "Яку назву має стан рідини, коли вона нагріта вище температури кипіння, але ще не кипить (через відсутність центрів пароутворення)?",
+                a: ["Охолоджена рідина", "Перегріта рідина", "Насичена пара", "Сублімована речовина"],
+                c: 1
+            }
+        ];
+
+        class Quiz {
+            constructor() {
+                this.currentIdx = 0;
+                this.score = 0;
+                this.timeLeft = 20;
+                this.timer = null;
+                this.audioCorrect = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3');
+                // Оновлено звук на більш емоційне "розчарування" (Oh no!)
+                this.audioWrong = new Audio('https://assets.mixkit.co/active_storage/sfx/240/240-preview.mp3');
+                this.audioWrong.volume = 0.5;
+            }
+
+            start() {
+                document.getElementById('start-screen').classList.add('hidden');
+                document.getElementById('quiz-screen').classList.remove('hidden');
+                this.showQuestion();
+            }
+
+            showQuestion() {
+                const q = questions[this.currentIdx];
+                document.getElementById('question-counter').innerText = `Запитання ${this.currentIdx + 1}/${questions.length}`;
+                document.getElementById('question-text').innerText = q.q;
+                
+                const container = document.getElementById('options-container');
+                container.innerHTML = '';
+                
+                q.a.forEach((opt, i) => {
+                    const btn = document.createElement('button');
+                    btn.className = "opt-btn w-full text-left p-5 rounded-2xl border-2 border-slate-100 bg-slate-50 hover:bg-white hover:border-blue-500 hover:shadow-md font-semibold text-slate-700 focus:outline-none";
+                    btn.innerText = opt;
+                    btn.onclick = () => this.handleAnswer(i);
+                    container.appendChild(btn);
+                });
+
+                this.resetTimer();
+                this.updateProgress();
+            }
+
+            resetTimer() {
+                clearInterval(this.timer);
+                this.timeLeft = 20;
+                this.updateTimerUI();
+                this.timer = setInterval(() => {
+                    this.timeLeft--;
+                    this.updateTimerUI();
+                    if (this.timeLeft <= 0) this.handleAnswer(-1);
+                }, 1000);
+            }
+
+            updateTimerUI() {
+                document.getElementById('timer-text').innerText = this.timeLeft;
+                const circle = document.getElementById('timer-circle');
+                const offset = 100 - (this.timeLeft / 20) * 100;
+                circle.style.strokeDashoffset = offset;
+                circle.style.stroke = this.timeLeft <= 5 ? '#ef4444' : '#2563eb';
+            }
+
+            updateProgress() {
+                const progress = (this.currentIdx / questions.length) * 100;
+                document.getElementById('progress-bar').style.width = `${progress}%`;
+            }
+
+            handleAnswer(idx) {
+                clearInterval(this.timer);
+                const q = questions[this.currentIdx];
+                const buttons = document.getElementById('options-container').children;
+
+                for (let btn of buttons) btn.disabled = true;
+
+                if (idx === q.c) {
+                    this.score++;
+                    this.audioCorrect.play().catch(()=>{});
+                    if (idx !== -1) {
+                        buttons[idx].classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+                    }
+                } else {
+                    this.audioWrong.play().catch(()=>{});
+                    document.getElementById('app').classList.add('fail-overlay');
+                    setTimeout(() => document.getElementById('app').classList.remove('fail-overlay'), 500);
+                    
+                    if (idx !== -1) {
+                        buttons[idx].classList.add('bg-red-50', 'border-red-500', 'text-red-700', 'shake-effect');
+                    }
+                    buttons[q.c].classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+                }
+
+                setTimeout(() => {
+                    this.currentIdx++;
+                    if (this.currentIdx < questions.length) this.showQuestion();
+                    else this.showResults();
+                }, 1800);
+            }
+
+            showResults() {
+                document.getElementById('quiz-screen').classList.add('hidden');
+                document.getElementById('results-screen').classList.remove('hidden');
+                const percentage = Math.round((this.score / questions.length) * 100);
+                document.getElementById('score-circle').innerText = `${percentage}%`;
+                
+                let msg = percentage === 100 ? "Неймовірно! Ти ідеально розумієш фізику кипіння." :
+                          percentage >= 75 ? "Чудовий результат! Ти добре знаєш чинники кипіння." :
+                          "Спробуй ще раз. Пам'ятай: енергія йде на розрив молекулярних зв'язків!";
+                
+                document.getElementById('result-message').innerText = msg;
+            }
+        }
+
+        const quiz = new Quiz();
+    </script>
+</body>
+</html>
