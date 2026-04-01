@@ -27,8 +27,8 @@
 
 <div class="max-w-4xl mx-auto p-4 md:p-8">
     <header class="mb-8 text-left">
-        <h1 class="text-3xl font-bold text-slate-800 mb-2">№ 74.3</h1>
-       
+        <h1 class="text-3xl font-bold text-slate-800">№ 74.3</h1>
+    </header>
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         <!-- Ліва колонка: Зображення графіка -->
@@ -42,7 +42,7 @@
                 <!-- Контейнер для зображення -->
                 <img 
                     src="graph_74_3.png" 
-                    alt="Графік залежності напруги від відносного видовження епсилон" 
+                    alt="Графік завдання" 
                     class="max-w-full h-auto rounded shadow-sm"
                     onerror="this.parentElement.innerHTML='<div class=\'p-8 text-center text-red-500\'>Помилка: файл <b>graph_74_3.png</b> не знайдено.<br><span class=\'text-xs text-slate-400\'>Переконайтеся, що файл лежить у тій самій папці, що і цей HTML.</span></div>'"
                 >
@@ -56,15 +56,21 @@
                 <h2 class="text-lg font-semibold mb-4">Встановіть відповідність</h2>
                 
                 <div id="matching-container" class="space-y-4">
+                    <!-- Шаблон для вибору -->
+                    <script type="text/template" id="select-options">
+                        <option value="">Оберіть варіант...</option>
+                        <option value="А">А) Деформація непружна, текучість</option>
+                        <option value="Б">Б) Деформація пружна, закон Гука не виконується</option>
+                        <option value="В">В) Деформація непружна, закон Гука виконується</option>
+                        <option value="Г">Г) Деформація пружна, закон Гука виконується</option>
+                        <option value="Д">Д) Деформація непружна, границя міцності</option>
+                    </script>
+
                     <!-- Точка K -->
                     <div class="flex items-center gap-4">
                         <div class="w-24 py-2 px-3 bg-blue-100 text-blue-800 rounded-lg font-bold text-center border border-blue-200">Точка K</div>
                         <select data-key="K" class="answer-select flex-1 p-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-400">
-                            <option value="">Оберіть варіант...</option>
-                            <option value="А">А) Деформація непружна, текучість</option>
-                            <option value="Б">Б) Деформація пружна, закон Гука не виконується</option>
-                            <option value="Г">Г) Деформація пружна, закон Гука виконується</option>
-                            <option value="Д">Д) Деформація непружна, границя міцності</option>
+                            <!-- Options injected by JS -->
                         </select>
                     </div>
 
@@ -72,11 +78,7 @@
                     <div class="flex items-center gap-4">
                         <div class="w-24 py-2 px-3 bg-blue-100 text-blue-800 rounded-lg font-bold text-center border border-blue-200">Точка L</div>
                         <select data-key="L" class="answer-select flex-1 p-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-400">
-                            <option value="">Оберіть варіант...</option>
-                            <option value="А">А) Деформація непружна, текучість</option>
-                            <option value="Б">Б) Деформація пружна, закон Гука не виконується</option>
-                            <option value="Г">Г) Деформація пружна, закон Гука виконується</option>
-                            <option value="Д">Д) Деформація непружна, границя міцності</option>
+                            <!-- Options injected by JS -->
                         </select>
                     </div>
 
@@ -84,11 +86,7 @@
                     <div class="flex items-center gap-4">
                         <div class="w-24 py-2 px-3 bg-blue-100 text-blue-800 rounded-lg font-bold text-center border border-blue-200">Точка M</div>
                         <select data-key="M" class="answer-select flex-1 p-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-400">
-                            <option value="">Оберіть варіант...</option>
-                            <option value="А">А) Деформація непружна, текучість</option>
-                            <option value="Б">Б) Деформація пружна, закон Гука не виконується</option>
-                            <option value="Г">Г) Деформація пружна, закон Гука виконується</option>
-                            <option value="Д">Д) Деформація непружна, границя міцності</option>
+                            <!-- Options injected by JS -->
                         </select>
                     </div>
 
@@ -96,11 +94,7 @@
                     <div class="flex items-center gap-4">
                         <div class="w-24 py-2 px-3 bg-blue-100 text-blue-800 rounded-lg font-bold text-center border border-blue-200">Точка N</div>
                         <select data-key="N" class="answer-select flex-1 p-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-400">
-                            <option value="">Оберіть варіант...</option>
-                            <option value="А">А) Деформація непружна, текучість</option>
-                            <option value="Б">Б) Деформація пружна, закон Гука не виконується</option>
-                            <option value="Г">Г) Деформація пружна, закон Гука виконується</option>
-                            <option value="Д">Д) Деформація непружна, границя міцності</option>
+                            <!-- Options injected by JS -->
                         </select>
                     </div>
                 </div>
@@ -125,6 +119,12 @@
 </div>
 
 <script>
+    // Ініціалізація опцій
+    const optionsHtml = document.getElementById('select-options').innerHTML;
+    document.querySelectorAll('.answer-select').forEach(select => {
+        select.innerHTML = optionsHtml;
+    });
+
     const correctAnswers = {
         'K': 'Г',
         'L': 'Б',
